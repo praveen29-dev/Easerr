@@ -1,12 +1,43 @@
-# React + Vite
+# Job Board Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the client-side application for the job board platform, built with React and Vite.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend**: React 19, React Router v7
+- **State Management**: React Query (TanStack Query) for API data fetching and caching
+- **Styling**: Tailwind CSS for responsive UI
+- **HTTP Client**: Axios for API requests
 
-## Expanding the ESLint configuration
+## Important Notes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- All Firebase functionality is handled exclusively on the server-side
+- File uploads (profile images, resumes) are processed through the backend API
+- Authentication is managed via JWT tokens, not Firebase Auth
+- The client never directly interacts with Firebase services
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm preview
+```
+
+## Environment Variables
+
+Create a `.env` file with the following:
+
+```
+VITE_API_URL=http://localhost:5000/api
+```
+
+Replace with your actual API URL in production.

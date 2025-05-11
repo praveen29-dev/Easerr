@@ -4,24 +4,29 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { AppContextProvider } from './context/AppContext.jsx'
-import {ClerkProvider} from '@clerk/clerk-react'
+import { AuthProvider } from './context/AuthContext.jsx'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-
-// Import your Publishable Key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Publishable Key')
-}
+// Create a React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 createRoot(document.getElementById('root')).render(
-
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl='/'>
-  <BrowserRouter>
-  <AppContextProvider>
-  <App />
-  </AppContextProvider>
-    
-  </BrowserRouter>
-  </ClerkProvider>,
+  <StrictMode>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppContextProvider>
+            <App />
+          </AppContextProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  </StrictMode>,
 )
