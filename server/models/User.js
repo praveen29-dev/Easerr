@@ -70,6 +70,15 @@ userSchema.methods.toJSON = function() {
     delete userObject.password;
     delete userObject.tokens;
     
+    // Map profileImage to profileImageUrl and resume to resumeUrl for frontend compatibility
+    if (userObject.profileImage) {
+        userObject.profileImageUrl = userObject.profileImage;
+    }
+    
+    if (userObject.resume) {
+        userObject.resumeUrl = userObject.resume;
+    }
+    
     return userObject;
 };
 

@@ -24,6 +24,12 @@ export const register = async (req, res) => {
 
     // Handle profile image upload if provided
     if (req.files && req.files.profileImage) {
+      console.log('Uploading profile image during registration:', {
+        name: req.files.profileImage.name,
+        size: req.files.profileImage.size,
+        tempFilePath: req.files.profileImage.tempFilePath,
+        hasData: !!req.files.profileImage.data
+      });
       const profileImageUrl = await uploadToStorage(
         req.files.profileImage,
         `profile-images/${user._id}`
@@ -33,6 +39,12 @@ export const register = async (req, res) => {
 
     // Handle resume upload if provided
     if (req.files && req.files.resume) {
+      console.log('Uploading resume during registration:', {
+        name: req.files.resume.name,
+        size: req.files.resume.size,
+        tempFilePath: req.files.resume.tempFilePath,
+        hasData: !!req.files.resume.data
+      });
       const resumeUrl = await uploadToStorage(
         req.files.resume,
         `resumes/${user._id}`
@@ -78,7 +90,6 @@ export const login = async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
     });
-
     res.json({
       user,
       token
@@ -139,6 +150,12 @@ export const updateProfile = async (req, res) => {
 
     // Handle profile image upload if provided
     if (req.files && req.files.profileImage) {
+      console.log('Uploading profile image:', {
+        name: req.files.profileImage.name,
+        size: req.files.profileImage.size,
+        tempFilePath: req.files.profileImage.tempFilePath,
+        hasData: !!req.files.profileImage.data
+      });
       const profileImageUrl = await uploadToStorage(
         req.files.profileImage,
         `profile-images/${req.user._id}`
@@ -148,6 +165,12 @@ export const updateProfile = async (req, res) => {
 
     // Handle resume upload if provided
     if (req.files && req.files.resume) {
+      console.log('Uploading resume:', {
+        name: req.files.resume.name,
+        size: req.files.resume.size,
+        tempFilePath: req.files.resume.tempFilePath,
+        hasData: !!req.files.resume.data
+      });
       const resumeUrl = await uploadToStorage(
         req.files.resume,
         `resumes/${req.user._id}`
@@ -156,6 +179,10 @@ export const updateProfile = async (req, res) => {
     }
 
     await req.user.save();
+    
+    // Log the response for debugging
+    console.log('Updated user data:', JSON.stringify(req.user, null, 2));
+    
     res.json(req.user);
   } catch (error) {
     console.error('Update profile error:', error);

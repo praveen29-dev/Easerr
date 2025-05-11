@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 
 // Initialize Firebase with your config
 const firebaseConfig = {
@@ -36,8 +37,20 @@ export const uploadToStorage = async (file, path) => {
     // Create storage reference
     const storageRef = ref(storage, fileName);
     
-    // Upload file
-    await uploadBytes(storageRef, file.data);
+    // Upload file - handle both file.data and tempFilePath scenarios
+    let fileBuffer;
+    
+    if (file.tempFilePath) {
+      // If using express-fileupload with tempFiles option
+      fileBuffer = fs.readFileSync(file.tempFilePath);
+    } else if (file.data) {
+      // If using express-fileupload without tempFiles option
+      fileBuffer = file.data;
+    } else {
+      throw new Error('No file data found');
+    }
+    
+    await uploadBytes(storageRef, fileBuffer);
     
     // Get download URL
     const downloadURL = await getDownloadURL(storageRef);

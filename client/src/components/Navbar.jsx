@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { assets } from '../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -8,9 +8,15 @@ import SignupModal from './SignupModal'
 const Navbar = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
   
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Reset image error state when user changes
+  useEffect(() => {
+    setProfileImageError(false);
+  }, [user]);
   
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
@@ -30,6 +36,10 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+  
+  const handleImageError = () => {
+    setProfileImageError(true);
   };
 
   return (
@@ -52,12 +62,13 @@ const Navbar = () => {
             )}
             <p className='max-sm:hidden'>Hi, {user.name}</p>
             <Link to="/profile">
-              {user.profileImageUrl ? (
+              {user.profileImageUrl && !profileImageError ? (
                 <div className='flex-shrink-0 h-8 w-8 rounded-full overflow-hidden border border-gray-200'>
                   <img 
                     src={user.profileImageUrl} 
                     alt={user.name} 
                     className='h-full w-full object-cover'
+                    onError={handleImageError}
                   />
                 </div>
               ) : (
