@@ -135,11 +135,14 @@ export const getRecruiterJobs = async ({
 // Get job statistics for recruiter dashboard
 export const getJobStats = async () => {
   try {
+    console.log('Fetching job stats...');
     const response = await axios.get(`${API_URL}/jobs/recruiter/stats`, {
       withCredentials: true
     });
+    console.log('Job stats API response:', response.data);
     return response.data;
   } catch (error) {
+    console.error('Error fetching job statistics:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch job statistics');
   }
 };

@@ -131,6 +131,7 @@ export const deleteApplication = async (id) => {
 // Get all applications for the recruiter (across all jobs)
 export const getAllRecruiterApplications = async ({ status = 'all', sort = 'newest', page = 1, limit = 10 }) => {
   try {
+    console.log('Fetching recruiter applications with params:', { status, sort, page, limit });
     const response = await axios.get(`${API_URL}/applications/recruiter`, {
       params: {
         status,
@@ -140,8 +141,10 @@ export const getAllRecruiterApplications = async ({ status = 'all', sort = 'newe
       },
       withCredentials: true
     });
+    console.log('Recruiter applications API response:', response.data);
     return response.data;
   } catch (error) {
+    console.error('Error fetching applications:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch applications');
   }
 }; 

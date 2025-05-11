@@ -43,6 +43,10 @@ const jobSchema = new mongoose.Schema({
     enum: ['active', 'closed', 'draft'],
     default: 'active',
   },
+  applicationCount: {
+    type: Number,
+    default: 0
+  },
   applicationDeadline: {
     type: Date,
   },

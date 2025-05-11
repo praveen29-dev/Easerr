@@ -9,12 +9,26 @@ import authRoutes from './routes/authRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import { rateLimit } from 'express-rate-limit';
+import { syncJobApplicationCounts } from './utils/syncCounts.js';
 
 // Initialize Express
 const app = express()
 
 // Connect to database
 await connectDB()
+
+// Sync application counts on server startup
+syncJobApplicationCounts()
+  .then(result => {
+    if (result.success) {
+      console.log('Initial application count sync completed');
+    } else {
+      console.error('Error during initial application count sync:', result.message);
+    }
+  })
+  .catch(err => {
+    console.error('Failed to run initial application count sync:', err);
+  });
 
 // Rate limiting
 const apiLimiter = rateLimit({

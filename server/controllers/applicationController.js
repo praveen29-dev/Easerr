@@ -1,6 +1,7 @@
 import Application from '../models/Application.js';
 import Job from '../models/Job.js';
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
 
 // Submit a job application
 export const submitApplication = async (req, res) => {
@@ -37,6 +38,9 @@ export const submitApplication = async (req, res) => {
       resume,
       coverLetter,
     });
+
+    // Increment the application count in the job document
+    await Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: 1 } });
 
     res.status(StatusCodes.CREATED).json({
       success: true,
@@ -294,7 +298,13 @@ export const deleteApplication = async (req, res) => {
       });
     }
 
+    // Get the job ID to update counter
+    const jobId = application.job;
+
     await Application.findByIdAndDelete(id);
+    
+    // Decrement the application count in the job document
+    await Job.findByIdAndUpdate(jobId, { $inc: { applicationCount: -1 } });
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -311,11 +321,14 @@ export const deleteApplication = async (req, res) => {
 // Get all applications for the recruiter (across all jobs)
 export const getAllRecruiterApplications = async (req, res) => {
   try {
+    console.log('Starting getAllRecruiterApplications for user:', req.user.userId);
     const { status, sort = 'newest', page = 1, limit = 10 } = req.query;
 
     // Find all jobs belonging to this recruiter
     const recruiterJobs = await Job.find({ company: req.user.userId }).select('_id');
     const jobIds = recruiterJobs.map(job => job._id);
+    
+    console.log('Found recruiter jobs:', jobIds.length);
     
     // Build query
     const queryObject = { job: { $in: jobIds } };
@@ -345,16 +358,22 @@ export const getAllRecruiterApplications = async (req, res) => {
       .limit(Number(limit))
       .populate('applicant', 'name email image')
       .populate('job', 'title location');
+    
+    console.log('Found applications:', applications.length);
 
     // Get total applications count for pagination
     const totalApplications = await Application.countDocuments(queryObject);
     const numOfPages = Math.ceil(totalApplications / Number(limit));
+    
+    console.log('Total applications:', totalApplications);
 
     // Get application status counts
     const statusCounts = await Application.aggregate([
       { $match: { job: { $in: jobIds } } },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
+    
+    console.log('Status counts:', statusCounts);
 
     // Format status counts
     const formattedStatusCounts = {
@@ -369,6 +388,8 @@ export const getAllRecruiterApplications = async (req, res) => {
     statusCounts.forEach(status => {
       formattedStatusCounts[status._id] = status.count;
     });
+    
+    console.log('Formatted status counts:', formattedStatusCounts);
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -379,6 +400,7 @@ export const getAllRecruiterApplications = async (req, res) => {
       statusCounts: formattedStatusCounts
     });
   } catch (error) {
+    console.error('Error in getAllRecruiterApplications:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message

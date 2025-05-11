@@ -30,7 +30,7 @@ const JobStatistics = () => {
     );
   }
 
-  const { jobStats, applicationStats, monthlyJobStats = [] } = statsData || {
+  const { jobStats, applicationStats, monthlyJobStats = [] } = statsData?.data || {
     jobStats: { total: 0, active: 0, closed: 0, draft: 0 },
     applicationStats: { total: 0, pending: 0, reviewed: 0, shortlisted: 0, rejected: 0, hired: 0 },
     monthlyJobStats: []

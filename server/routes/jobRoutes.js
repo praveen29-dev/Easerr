@@ -7,7 +7,8 @@ import {
   deleteJob, 
   getRecruiterJobs, 
   getJobStats,
-  changeJobStatus
+  changeJobStatus,
+  syncApplicationCounts
 } from '../controllers/jobController.js';
 import { auth, checkRole } from '../middleware/auth.js';
 
@@ -26,5 +27,6 @@ router.patch('/:id/status', auth, checkRole('recruiter'), changeJobStatus);
 // Recruiter stats and job management
 router.get('/recruiter/jobs', auth, checkRole('recruiter'), getRecruiterJobs);
 router.get('/recruiter/stats', auth, checkRole('recruiter'), getJobStats);
+router.post('/sync-counts', auth, checkRole('admin'), syncApplicationCounts);
 
 export default router; 

@@ -1,6 +1,8 @@
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
+import { syncJobApplicationCounts } from '../utils/syncCounts.js';
 
 // Create a new job
 export const createJob = async (req, res) => {
@@ -277,24 +279,13 @@ export const getRecruiterJobs = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
-    // Get application count for each job
-    const jobsWithApplications = await Promise.all(
-      jobs.map(async (job) => {
-        const applicationCount = await Application.countDocuments({ job: job._id });
-        return {
-          ...job.toObject(),
-          applicationCount
-        };
-      })
-    );
-
     // Get total jobs count for pagination
     const totalJobs = await Job.countDocuments(queryObject);
     const numOfPages = Math.ceil(totalJobs / Number(limit));
 
     res.status(StatusCodes.OK).json({
       success: true,
-      jobs: jobsWithApplications,
+      jobs,
       totalJobs,
       numOfPages,
       currentPage: Number(page)
@@ -310,11 +301,15 @@ export const getRecruiterJobs = async (req, res) => {
 // Get job statistics for the recruiter's dashboard
 export const getJobStats = async (req, res) => {
   try {
+    console.log('Starting getJobStats for user:', req.user.userId);
+    
     // Get total number of jobs by status
     const jobStats = await Job.aggregate([
-      { $match: { company: mongoose.Types.ObjectId(req.user.userId) } },
+      { $match: { company: new mongoose.Types.ObjectId(req.user.userId) } },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
+    
+    console.log('Job stats:', jobStats);
 
     // Get application statistics
     const applicationStats = await Application.aggregate([
@@ -327,9 +322,11 @@ export const getJobStats = async (req, res) => {
         } 
       },
       { $unwind: '$jobInfo' },
-      { $match: { 'jobInfo.company': mongoose.Types.ObjectId(req.user.userId) } },
+      { $match: { 'jobInfo.company': new mongoose.Types.ObjectId(req.user.userId) } },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
+    
+    console.log('Application stats:', applicationStats);
 
     // Get monthly job posting stats for the last 6 months
     const sixMonthsAgo = new Date();
@@ -338,7 +335,7 @@ export const getJobStats = async (req, res) => {
     const monthlyJobStats = await Job.aggregate([
       { 
         $match: { 
-          company: mongoose.Types.ObjectId(req.user.userId),
+          company: new mongoose.Types.ObjectId(req.user.userId),
           createdAt: { $gte: sixMonthsAgo } 
         } 
       },
@@ -353,6 +350,8 @@ export const getJobStats = async (req, res) => {
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
+    
+    console.log('Monthly job stats:', monthlyJobStats);
 
     // Format the response
     const formattedJobStats = {
@@ -380,6 +379,9 @@ export const getJobStats = async (req, res) => {
       formattedApplicationStats[stat._id] = stat.count;
       formattedApplicationStats.total += stat.count;
     });
+    
+    console.log('Formatted job stats:', formattedJobStats);
+    console.log('Formatted application stats:', formattedApplicationStats);
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -388,6 +390,7 @@ export const getJobStats = async (req, res) => {
       monthlyJobStats
     });
   } catch (error) {
+    console.error('Error in getJobStats:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message
@@ -428,6 +431,30 @@ export const changeJobStatus = async (req, res) => {
       message: `Job status changed to ${status}`,
       job
     });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Sync application counts for all jobs
+export const syncApplicationCounts = async (req, res) => {
+  try {
+    const result = await syncJobApplicationCounts();
+    
+    if (result.success) {
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: result.message
+      });
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: result.message
+      });
+    }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
