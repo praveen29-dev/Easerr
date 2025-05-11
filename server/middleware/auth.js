@@ -27,6 +27,7 @@ export const auth = async (req, res, next) => {
     // Add user and token to request for use in route handlers
     req.token = token;
     req.user = user;
+    req.user.userId = user._id.toString();
     next();
   } catch (error) {
     console.error('Authentication error:', error);
@@ -47,6 +48,27 @@ export const restrict = (roles = []) => {
     
     if (roles.length > 0 && !roles.includes(req.user.role)) {
       return res.status(403).json({ message: 'Access denied. Insufficient permissions' });
+    }
+    
+    next();
+  };
+};
+
+// Middleware for checking specific roles
+export const checkRole = (role) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Authentication required' 
+      });
+    }
+    
+    if (req.user.role !== role) {
+      return res.status(403).json({ 
+        success: false,
+        message: `Access denied. ${role} role required.` 
+      });
     }
     
     next();

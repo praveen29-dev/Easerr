@@ -6,6 +6,8 @@ import connectDB from './config/db.js'
 import cookieParser from 'cookie-parser';
 import fileUpload from 'express-fileupload';
 import authRoutes from './routes/authRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
+import applicationRoutes from './routes/applicationRoutes.js';
 import { rateLimit } from 'express-rate-limit';
 
 // Initialize Express
@@ -41,6 +43,8 @@ app.use(fileUpload({
 // Routes
 app.get('/', (req, res) => res.send("API WORKING"))
 app.use('/api/auth', authRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/applications', applicationRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
