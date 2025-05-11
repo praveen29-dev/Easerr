@@ -10,6 +10,7 @@ import jobRoutes from './routes/jobRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import { rateLimit } from 'express-rate-limit';
 import { syncJobApplicationCounts } from './utils/syncCounts.js';
+import { setupSwagger } from './config/swagger.js';
 
 // Initialize Express
 const app = express()
@@ -54,6 +55,9 @@ app.use(fileUpload({
   useTempFiles: true
 }))
 
+// Setup Swagger documentation
+setupSwagger(app);
+
 // Routes
 app.get('/', (req, res) => res.send("API WORKING"))
 app.use('/api/auth', authRoutes);
@@ -79,4 +83,5 @@ const PORT = process.env.PORT || 5000
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Swagger API docs available at http://localhost:${PORT}/api-docs`);
 })
