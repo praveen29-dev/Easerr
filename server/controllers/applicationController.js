@@ -156,8 +156,11 @@ export const getUserApplications = async (req, res) => {
   try {
     const { status, sort = 'newest', page = 1, limit = 10 } = req.query;
 
-    // Build query
-    const queryObject = { applicant: req.user.userId };
+    // Build query for all user applications (for counting)
+    const baseQueryObject = { applicant: req.user.userId };
+    
+    // Build query for filtered applications
+    const queryObject = { ...baseQueryObject };
     
     // Filter by status
     if (status && status !== 'all') {
@@ -195,14 +198,36 @@ export const getUserApplications = async (req, res) => {
     const totalApplications = await Application.countDocuments(queryObject);
     const numOfPages = Math.ceil(totalApplications / Number(limit));
 
+    // Get status counts for filtering
+    const statusCounts = await Application.aggregate([
+      { $match: baseQueryObject },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    // Format status counts
+    const formattedStatusCounts = {
+      total: await Application.countDocuments(baseQueryObject),
+      pending: 0,
+      reviewed: 0,
+      shortlisted: 0,
+      rejected: 0,
+      hired: 0
+    };
+
+    statusCounts.forEach(status => {
+      formattedStatusCounts[status._id] = status.count;
+    });
+
     res.status(StatusCodes.OK).json({
       success: true,
       applications,
       totalApplications,
       numOfPages,
-      currentPage: Number(page)
+      currentPage: Number(page),
+      statusCounts: formattedStatusCounts
     });
   } catch (error) {
+    console.error('Error in getUserApplications:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message

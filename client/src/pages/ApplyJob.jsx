@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import Navbar from '../components/Navbar'
 import Loading from '../components/Loading'
@@ -9,13 +9,23 @@ import moment from 'moment';
 import JobCard from '../components/JobCard'
 import Footer from '../components/Footer'
 import ApplicationModal from '../components/ApplicationModal'
+import { useQuery } from '@tanstack/react-query'
+import { getUserApplications } from '../api/applicationApi'
 
 const ApplyJob = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [jobData, setJobData] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { jobs } = useContext(AppContext)
-console.log(jobs,"jobs",id,"id",jobData,"jobData")
+  const [hasApplied, setHasApplied] = useState(false)
+  
+  // Fetch user's applications to check if already applied
+  const { data: applicationsData } = useQuery({
+    queryKey: ['userApplications', { limit: 100 }],
+    queryFn: () => getUserApplications({ limit: 100 }),
+  })
+
   useEffect(() => {
     if (jobs && Array.isArray(jobs) && jobs.length > 0 && id) {
       const data = jobs.find(job => job._id === id)
@@ -27,6 +37,16 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
       }
     }
   }, [id, jobs])
+  
+  // Check if user has already applied for this job
+  useEffect(() => {
+    if (applicationsData?.applications && id) {
+      const alreadyApplied = applicationsData.applications.some(
+        app => app.job?._id === id
+      )
+      setHasApplied(alreadyApplied)
+    }
+  }, [applicationsData, id])
 
   const handleOpenModal = () => {
     setIsModalOpen(true)
@@ -34,6 +54,10 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+  }
+  
+  const handleViewApplications = () => {
+    navigate('/applications')
   }
 
   return jobData ? (
@@ -67,12 +91,21 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
             </div>
             </div>
             <div className='flex flex-col justify-center text-sm text-end max-md:mx-auto max-md:text-center'>
-            <button 
-              className='p-2.5 px-10 text-white rounded bg-blue-600 hover:bg-blue-700 transition-colors'
-              onClick={handleOpenModal}
-            >
-              Apply Now
-            </button>
+            {hasApplied ? (
+              <button 
+                className='p-2.5 px-10 text-white bg-green-600 rounded hover:bg-green-700 transition-colors'
+                onClick={handleViewApplications}
+              >
+                Already Applied
+              </button>
+            ) : (
+              <button 
+                className='p-2.5 px-10 text-white rounded bg-blue-600 hover:bg-blue-700 transition-colors'
+                onClick={handleOpenModal}
+              >
+                Apply Now
+              </button>
+            )}
             <p className='mt-1 text-gray-600'>Posted {moment(jobData.date).fromNow()}</p>
           </div>
           </div>
@@ -81,12 +114,21 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
           <div className='w-full lg:w-2/3'>
             <h2 className='mb-4 text-2xl font-bold'>Job Description</h2>
             <div className='rich-text' dangerouslySetInnerHTML={{__html: jobData.description || 'No description available'}}></div>
-            <button 
-              className='p-2.5 px-10 text-white rounded bg-blue-600 mt-10 hover:bg-blue-700 transition-colors'
-              onClick={handleOpenModal}
-            >
-              Apply Now
-            </button>
+            {hasApplied ? (
+              <button 
+                className='p-2.5 px-10 mt-10 text-white bg-green-600 rounded hover:bg-green-700 transition-colors'
+                onClick={handleViewApplications}
+              >
+                View Your Application
+              </button>
+            ) : (
+              <button 
+                className='p-2.5 px-10 text-white rounded bg-blue-600 mt-10 hover:bg-blue-700 transition-colors'
+                onClick={handleOpenModal}
+              >
+                Apply Now
+              </button>
+            )}
           </div>
           {/* RIght Section More Jobs */}
           <div className='w-full mt-8 space-y-5 lg:w-1/3 lg:mt-8'>
