@@ -44,13 +44,13 @@ const isValidObjectId = (id) => {
 export const submitApplication = async (applicationData, resumeFile) => {
   try {
     // Validate job ID before submission
-    if (!applicationData || !isValidObjectId(applicationData.job)) {
+    if (!applicationData || !isValidObjectId(applicationData.jobId)) {
       throw new Error('Invalid job ID');
     }
     
     // Use FormData for file upload
     const formData = new FormData();
-    formData.append('job', applicationData.job);
+    formData.append('jobId', applicationData.jobId);
     formData.append('coverLetter', applicationData.coverLetter);
     
     if (resumeFile) {

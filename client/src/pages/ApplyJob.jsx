@@ -8,10 +8,12 @@ import kconvert from 'k-convert';
 import moment from 'moment';
 import JobCard from '../components/JobCard'
 import Footer from '../components/Footer'
+import ApplicationModal from '../components/ApplicationModal'
 
 const ApplyJob = () => {
   const { id } = useParams()
   const [jobData, setJobData] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { jobs } = useContext(AppContext)
 console.log(jobs,"jobs",id,"id",jobData,"jobData")
   useEffect(() => {
@@ -25,6 +27,14 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
       }
     }
   }, [id, jobs])
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
 
   return jobData ? (
     <>
@@ -57,7 +67,12 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
             </div>
             </div>
             <div className='flex flex-col justify-center text-sm text-end max-md:mx-auto max-md:text-center'>
-            <button className='p-2.5 px-10 text-white rounded bg-blue-600'>Apply Now</button>
+            <button 
+              className='p-2.5 px-10 text-white rounded bg-blue-600 hover:bg-blue-700 transition-colors'
+              onClick={handleOpenModal}
+            >
+              Apply Now
+            </button>
             <p className='mt-1 text-gray-600'>Posted {moment(jobData.date).fromNow()}</p>
           </div>
           </div>
@@ -66,7 +81,12 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
           <div className='w-full lg:w-2/3'>
             <h2 className='mb-4 text-2xl font-bold'>Job Description</h2>
             <div className='rich-text' dangerouslySetInnerHTML={{__html: jobData.description || 'No description available'}}></div>
-            <button className='p-2.5 px-10 text-white rounded bg-blue-600 mt-10'>Apply Now</button>
+            <button 
+              className='p-2.5 px-10 text-white rounded bg-blue-600 mt-10 hover:bg-blue-700 transition-colors'
+              onClick={handleOpenModal}
+            >
+              Apply Now
+            </button>
           </div>
           {/* RIght Section More Jobs */}
           <div className='w-full mt-8 space-y-5 lg:w-1/3 lg:mt-8'>
@@ -79,6 +99,15 @@ console.log(jobs,"jobs",id,"id",jobData,"jobData")
           
         </div>
       </div>
+      
+      {/* Job Application Modal */}
+      <ApplicationModal 
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        jobId={jobData._id}
+        jobTitle={jobData.title}
+      />
+      
       <Footer />
     </>
   ) : (
