@@ -43,8 +43,8 @@ const Navbar = () => {
   };
 
   return (
-    <div className='py-4 shadow'>
-      <div className='container flex items-center justify-between px-4 mx-auto 2xl:px20'>
+    <div className='py-4 shadow 2xl:px-20"'>
+      <div className='container flex items-center justify-between px-4 mx-auto '>
         <img onClick={() => navigate('/')} className='cursor-pointer' src={assets.logo} alt='Easerr Logo' />
         
         {user ? (
@@ -63,11 +63,11 @@ const Navbar = () => {
             <p className='max-sm:hidden'>Hi, {user.name}</p>
             <Link to="/profile">
               {user.profileImageUrl && !profileImageError ? (
-                <div className='flex-shrink-0 h-8 w-8 rounded-full overflow-hidden border border-gray-200'>
+                <div className='flex-shrink-0 w-8 h-8 overflow-hidden border border-gray-200 rounded-full'>
                   <img 
                     src={user.profileImageUrl} 
                     alt={user.name} 
-                    className='h-full w-full object-cover'
+                    className='object-cover w-full h-full'
                     onError={handleImageError}
                   />
                 </div>
@@ -96,7 +96,7 @@ const Navbar = () => {
             </button>
             <button 
               onClick={openLoginModal} 
-              className='px-6 py-2 text-white bg-purple-600 rounded-full sm:px-9 hover:bg-purple-700'
+              className='px-6 py-2 text-white rounded-full bg-gradient-to-r from-purple-500 to-blue-500 sm:px-9 hover:bg-purple-700'
             >
               Login
             </button>
