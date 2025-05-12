@@ -34,13 +34,23 @@ const JobCard = ({ job }) => {
         return job.location;
     }
 
-    // Format job type safely
+    // Format job type safely - could be jobType or category in the API response
     const getJobType = () => {
-        if (!job.jobType) return null;
-        if (typeof job.jobType === 'object') {
-            return job.jobType.name || '';
+        // First check jobType property
+        if (job.jobType) {
+            if (typeof job.jobType === 'object') {
+                return job.jobType.name || '';
+            }
+            return job.jobType;
         }
-        return job.jobType;
+        // Otherwise check category property
+        if (job.category) {
+            if (typeof job.category === 'object') {
+                return job.category.name || '';
+            }
+            return job.category;
+        }
+        return null;
     }
 
     // Format job level safely
@@ -51,6 +61,33 @@ const JobCard = ({ job }) => {
         }
         return job.level;
     }
+
+    // Get job type badge color based on category
+    const getJobTypeBadgeColor = (jobType) => {
+        if (!jobType) return { bg: 'bg-gray-50', border: 'border-gray-200' };
+        
+        const type = jobType.toLowerCase();
+        if (type.includes('program') || type === 'programming') {
+            return { bg: 'bg-blue-50', border: 'border-blue-200' };
+        } else if (type.includes('data') || type === 'data science') {
+            return { bg: 'bg-purple-50', border: 'border-purple-200' };
+        } else if (type.includes('design') || type === 'designing') {
+            return { bg: 'bg-pink-50', border: 'border-pink-200' };
+        } else if (type.includes('market') || type === 'marketing') {
+            return { bg: 'bg-orange-50', border: 'border-orange-200' };
+        } else if (type.includes('manage') || type === 'management') {
+            return { bg: 'bg-green-50', border: 'border-green-200' };
+        } else if (type.includes('cyber') || type === 'cybersecurity') {
+            return { bg: 'bg-red-50', border: 'border-red-200' };
+        } else if (type.includes('network') || type === 'networking') {
+            return { bg: 'bg-indigo-50', border: 'border-indigo-200' };
+        }
+        
+        return { bg: 'bg-gray-50', border: 'border-gray-200' };
+    };
+
+    const jobType = getJobType();
+    const jobTypeBadgeColor = getJobTypeBadgeColor(jobType);
 
     return (
         <div className='p-6 border rounded shadow transition-all hover:shadow-md'>
@@ -77,8 +114,10 @@ const JobCard = ({ job }) => {
             
             <div className='flex flex-wrap items-center gap-2 mt-3 text-xs'>
                 <span className='bg-blue-50 border border-blue-200 px-3 py-1 rounded-full'>{getLocation()}</span>
-                {getJobType() && (
-                    <span className='bg-green-50 border border-green-200 px-3 py-1 rounded-full'>{getJobType()}</span>
+                {jobType && (
+                    <span className={`${jobTypeBadgeColor.bg} border ${jobTypeBadgeColor.border} px-3 py-1 rounded-full`}>
+                        {jobType}
+                    </span>
                 )}
                 {getJobLevel() && (
                     <span className='bg-red-50 border border-red-200 px-3 py-1 rounded-full'>{getJobLevel()}</span>

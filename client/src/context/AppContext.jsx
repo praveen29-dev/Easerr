@@ -24,11 +24,19 @@ export const AppContextProvider = (props) => {
     })
 
     // Add safeguards to handle API response
-    const { data: jobsData, isLoading, error } = useQuery({
+    const { data: jobsData, isLoading, error, refetch } = useQuery({
         queryKey: ['jobs', jobsParams],
         queryFn: async () => {
             try {
-                const response = await getAllJobs(jobsParams);
+                // Create a params object specifically for the API
+                // Mapping frontend job types to backend categories if needed
+                const apiParams = {
+                    ...jobsParams,
+                    // Backend might use different field names, adapt as needed
+                    category: jobsParams.jobType || undefined,
+                };
+                
+                const response = await getAllJobs(apiParams);
                 
                 // Ensure the response is well-formed
                 if (!response || typeof response !== 'object') {
@@ -39,9 +47,20 @@ export const AppContextProvider = (props) => {
                 const jobs = Array.isArray(response.jobs) ? response.jobs : [];
                 const totalJobs = typeof response.totalJobs === 'number' ? response.totalJobs : 0;
                 
+                // Process job data to ensure consistent structure
+                const processedJobs = jobs.map(job => {
+                    // Make sure job type/category is consistently available
+                    if (job.category && !job.jobType) {
+                        job.jobType = job.category;
+                    } else if (job.jobType && !job.category) {
+                        job.category = job.jobType;
+                    }
+                    return job;
+                });
+                
                 return {
                     ...response,
-                    jobs,
+                    jobs: processedJobs,
                     totalJobs,
                 };
             } catch (err) {
@@ -66,15 +85,38 @@ export const AppContextProvider = (props) => {
         }
     }, [searchFilter])
 
+    // Add a function to clear all filters
+    const clearFilters = () => {
+        setJobsParams({
+            search: '',
+            location: '',
+            jobType: '',
+            skills: [],
+            status: 'active',
+            sort: 'latest',
+            page: 1,
+            limit: 20
+        });
+        setSearchFilter({
+            title: '',
+            location: ''
+        });
+        setIsSearched(false);
+    };
+
     const value = {
-        setSearchFilter, searchFilter,
-        isSearched, setIsSearched,
+        setSearchFilter, 
+        searchFilter,
+        isSearched, 
+        setIsSearched,
         jobs: jobsData?.jobs || [],
         totalJobs: jobsData?.totalJobs || 0,
         isLoading,
         error,
         jobsParams,
-        setJobsParams
+        setJobsParams,
+        clearFilters,
+        refetchJobs: refetch
     }
 
     return (<AppContext.Provider value={value}>

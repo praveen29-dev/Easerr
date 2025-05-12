@@ -14,7 +14,8 @@ const JobListing = () => {
         error,
         totalJobs,
         jobsParams,
-        setJobsParams
+        setJobsParams,
+        clearFilters
     } = useContext(AppContext)
 
     const [selectedCategories, setSelectedCategories] = useState([])
@@ -29,30 +30,36 @@ const JobListing = () => {
     };
 
     const handleCategoryChange = (category) => {
-        setSelectedCategories(
-            prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
-        );
-        // Update job params when categories change
+        // Update selected categories UI state
+        const newSelectedCategories = selectedCategories.includes(category)
+            ? selectedCategories.filter(c => c !== category)
+            : [...selectedCategories, category];
+        
+        setSelectedCategories(newSelectedCategories);
+        
+        // Update job params with the new job types (categories)
         setJobsParams(prev => ({
             ...prev,
-            jobType: selectedCategories.includes(category) 
-                ? prev.jobType.replace(category, '').trim() 
-                : `${prev.jobType} ${category}`.trim(),
+            jobType: newSelectedCategories.join(','),
             page: 1 // Reset to first page
         }));
     };
     
     const handleLocationChange = (location) => {
-        setSelectedLocations(
-            prev => prev.includes(location) ? prev.filter(l => l !== location) : [...prev, location]
-        );
-        // Update job params when locations change
-        const locationValue = getLocationValue(location);
+        // Update selected locations UI state
+        const newSelectedLocations = selectedLocations.includes(location)
+            ? selectedLocations.filter(l => l !== location)
+            : [...selectedLocations, location];
+            
+        setSelectedLocations(newSelectedLocations);
+        
+        // Get location values for API
+        const locationValues = newSelectedLocations.map(loc => getLocationValue(loc));
+        
+        // Update job params with locations
         setJobsParams(prev => ({
             ...prev,
-            location: selectedLocations.includes(location) 
-                ? prev.location.replace(locationValue, '').trim() 
-                : `${prev.location} ${locationValue}`.trim(),
+            location: locationValues.join(','),
             page: 1 // Reset to first page
         }));
     };
@@ -105,23 +112,25 @@ const JobListing = () => {
                     )
                 }
 
-                {/* category filter */}
+                {/* Job Type filter (Categories) */}
                 <div className='max-lg:hidden'>
                     <h4 className='py-4 text-lg font-medium'>
-                        Search by Category
+                        Job Type
                     </h4>
                     <ul className='space-y-4 text-gray-600'>
                         {
-                            JobCategories.map((category,index)=>(
+                            JobCategories.map((category, index) => (
                                 <li className='flex items-center gap-3' key={index}>
                                     <input 
-                                    className='scale-125' 
-                                    type='checkbox' 
-                                    name='' 
-                                    onChange={()=> handleCategoryChange(category)}
-                                    checked = {selectedCategories.includes(category)} 
+                                        className='scale-125' 
+                                        type='checkbox' 
+                                        id={`category-${index}`}
+                                        onChange={() => handleCategoryChange(category)}
+                                        checked={selectedCategories.includes(category)} 
                                     />
-                                    {category}
+                                    <label htmlFor={`category-${index}`} className="cursor-pointer select-none">
+                                        {category}
+                                    </label>
                                 </li>
                             ))
                         }
@@ -135,21 +144,86 @@ const JobListing = () => {
                     </h4>
                     <ul className='space-y-4 text-gray-600'>
                         {
-                            JobLocations.map((location, index)=>(
+                            JobLocations.map((location, index) => (
                                 <li className='flex items-center gap-3' key={index}>
                                     <input 
-                                    className='scale-125' 
-                                    type='checkbox' 
-                                    name='' 
-                                    onChange={()=> handleLocationChange(location)}
-                                    checked = {selectedLocations.includes(location)} 
+                                        className='scale-125' 
+                                        type='checkbox' 
+                                        id={`location-${index}`}
+                                        onChange={() => handleLocationChange(location)}
+                                        checked={selectedLocations.includes(location)} 
                                     />
-                                    {typeof location === 'object' ? (location.name || 'Unknown') : location}
+                                    <label htmlFor={`location-${index}`} className="cursor-pointer select-none">
+                                        {typeof location === 'object' ? (location.name || 'Unknown') : location}
+                                    </label>
                                 </li>
                             ))
                         }
                     </ul>
                 </div>
+                
+                {/* Selected Filters */}
+                {(selectedCategories.length > 0 || selectedLocations.length > 0 || searchFilter.title || searchFilter.location) && (
+                    <div className='pt-6'>
+                        <div className='flex items-center justify-between'>
+                            <h4 className='py-2 text-lg font-medium'>
+                                Active Filters
+                            </h4>
+                            <button 
+                                onClick={clearFilters}
+                                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+                        <div className='flex flex-wrap gap-2 mt-2'>
+                            {searchFilter.title && (
+                                <span className='inline-flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 px-3 py-1 rounded text-sm'>
+                                    Search: {searchFilter.title}
+                                    <img 
+                                        onClick={() => setSearchFilter(prev => ({...prev, title: ""}))} 
+                                        className='w-3 h-3 cursor-pointer' 
+                                        src={assets.cross_icon} 
+                                        alt='Remove filter' 
+                                    />
+                                </span>
+                            )}
+                            {searchFilter.location && (
+                                <span className='inline-flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 px-3 py-1 rounded text-sm'>
+                                    Location: {searchFilter.location}
+                                    <img 
+                                        onClick={() => setSearchFilter(prev => ({...prev, location: ""}))} 
+                                        className='w-3 h-3 cursor-pointer' 
+                                        src={assets.cross_icon} 
+                                        alt='Remove filter' 
+                                    />
+                                </span>
+                            )}
+                            {selectedCategories.map((category, index) => (
+                                <span key={`cat-${index}`} className='inline-flex items-center gap-1.5 bg-green-50 border border-green-200 px-3 py-1 rounded text-sm'>
+                                    {category}
+                                    <img 
+                                        onClick={() => handleCategoryChange(category)} 
+                                        className='w-3 h-3 cursor-pointer' 
+                                        src={assets.cross_icon} 
+                                        alt='Remove filter' 
+                                    />
+                                </span>
+                            ))}
+                            {selectedLocations.map((location, index) => (
+                                <span key={`loc-${index}`} className='inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1 rounded text-sm'>
+                                    {typeof location === 'object' ? (location.name || 'Unknown') : location}
+                                    <img 
+                                        onClick={() => handleLocationChange(location)} 
+                                        className='w-3 h-3 cursor-pointer' 
+                                        src={assets.cross_icon} 
+                                        alt='Remove filter' 
+                                    />
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Job Listing */}
