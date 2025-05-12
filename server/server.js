@@ -8,6 +8,7 @@ import fileUpload from 'express-fileupload';
 import authRoutes from './routes/authRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { rateLimit } from 'express-rate-limit';
 import { syncJobApplicationCounts } from './utils/syncCounts.js';
 import { setupSwagger } from './config/swagger.js';
@@ -66,6 +67,7 @@ app.get('/', (req, res) => res.send("API WORKING"))
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

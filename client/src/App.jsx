@@ -10,12 +10,18 @@ import ManageJobs from './pages/ManageJobs'
 import ViewApplications from './pages/ViewApplications'
 import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
+import AdminLogin from './pages/admin/Login'
+import AdminDashboard from './pages/admin/Dashboard'
+import { Toaster } from 'react-hot-toast'
 import 'quill/dist/quill.snow.css'
 
 const App = () => {
   return (
     <div>
+      <Toaster position="top-right" />
       <Routes>
+        {/* Public and User Routes */}
         <Route path='/' element={<Home />} />
         <Route path='/apply-job/:id' element={<ApplyJob />} />
         <Route 
@@ -48,6 +54,14 @@ const App = () => {
           <Route path='view-applications' element={<ViewApplications/>}/>
           <Route path='applications/:jobId' element={<ViewApplications/>}/>
         </Route>
+        
+        {/* Admin Routes */}
+        <Route path='/admin' element={<AdminLogin />} />
+        <Route path='/admin/dashboard' element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
       </Routes>
     </div>
   )
