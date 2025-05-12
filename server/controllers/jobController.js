@@ -279,18 +279,46 @@ export const getRecruiterJobs = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
-    // Get total jobs count for pagination
+    // Get total jobs count for pagination based on the current filter
     const totalJobs = await Job.countDocuments(queryObject);
     const numOfPages = Math.ceil(totalJobs / Number(limit));
+
+    // Get job statistics for all statuses (regardless of current filter)
+    const jobStats = await Job.aggregate([
+      { $match: { company: new mongoose.Types.ObjectId(req.user.userId) } },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    
+    // Format the job statistics
+    const formattedJobStats = {
+      total: 0,
+      active: 0,
+      closed: 0,
+      draft: 0
+    };
+
+    jobStats.forEach(stat => {
+      if (stat._id) { // Ensure the status is not null or undefined
+        formattedJobStats[stat._id] = stat.count;
+        formattedJobStats.total += stat.count;
+      }
+    });
+
+    // For debugging
+    console.log('Query:', JSON.stringify(queryObject));
+    console.log('Total jobs found:', totalJobs);
+    console.log('Job stats:', formattedJobStats);
 
     res.status(StatusCodes.OK).json({
       success: true,
       jobs,
       totalJobs,
       numOfPages,
-      currentPage: Number(page)
+      currentPage: Number(page),
+      jobStats: formattedJobStats
     });
   } catch (error) {
+    console.error('Error in getRecruiterJobs:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message

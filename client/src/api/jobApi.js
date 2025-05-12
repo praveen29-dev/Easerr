@@ -68,6 +68,7 @@ export const getJobById = async (id) => {
     
     const response = await axios.get(`${API_URL}/jobs/${id}`);
     return response.data;
+    console.log("job data",response.data)
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch job');
   }
@@ -81,11 +82,20 @@ export const updateJob = async ({ id, jobData }) => {
       throw new Error('Invalid job ID');
     }
     
+    console.log(`Sending PUT request to ${API_URL}/jobs/${id} with data:`, jobData);
+    
     const response = await axios.put(`${API_URL}/jobs/${id}`, jobData, {
-      withCredentials: true
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      withCredentials: true // This ensures cookies/auth are sent with the request
     });
+    
+    console.log('Update job API response:', response.data);
     return response.data;
   } catch (error) {
+    console.error('Error in updateJob API call:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to update job');
   }
 };
@@ -127,6 +137,7 @@ export const getRecruiterJobs = async ({
       withCredentials: true
     });
     return response.data;
+    console.log("recruiter jobs",response.data)
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch recruiter jobs');
   }
