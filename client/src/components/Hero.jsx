@@ -24,14 +24,14 @@ const Hero = () => {
 
   return (
     <div className="container mx-auto my-10 2xl:px-20">
-        <div className="py-16 mx-2 text-center text-white bg-gradient-to-r from-purple-800/80 to-purple-950/80 rounded-xl">
-            <h2 className="mb-4 text-2xl font-medium md:text-3xl lg:text-4xl">
+        <div className="py-32 mx-2 text-center text-white bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl">
+            <h2 className="mb-4 text-2xl font-medium main-font md:text-3xl lg:text-6xl">
                 Find the job that fits your life
             </h2>
-            <p className="max-w-xl px-5 mx-auto mb-8 text-sm font-light">
+            <p className="max-w-xl px-0 mx-auto mb-8 text-lg font-light">
                 Find the Perfect Job or Hire the Right Talent with Easerr. – Connecting Ambitious Professionals and Top Employers in One Seamless Platform.
             </p>
-            <div className="flex items-center justify-between max-w-xl p-2 pl-6 mx-4 text-gray-600 bg-white rounded sm:mx-auto">
+            <div className="flex items-center justify-between max-w-xl p-2 pl-6 mx-4 text-gray-600 bg-white rounded-full sm:mx-auto">
                 <div className='flex items-center'>
                     <img className="h-4 sm:h-5" src={assets.search_icon} alt='' />
                     <input
@@ -50,7 +50,7 @@ const Hero = () => {
               ref={locationRef}
             />
                 </div>
-                <button onClick={onSearch} className="px-6 py-2 m-1 text-white bg-blue-600 rounded">
+                <button onClick={onSearch} className="px-6 py-2 m-1 text-white bg-blue-600 rounded-full">
             Search
           </button>
             </div>

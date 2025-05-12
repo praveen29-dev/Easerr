@@ -115,22 +115,24 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+
+
+      <div className="fixed inset-0 z-50 flex items-center justify-center pt-2 bg-black bg-opacity-50" >
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">Sign Up</h2>
+        <div className="flex items-center justify-between mb-4 ">
+          <h2 className="text-2xl font-bold text-gray-800 ">Create your account</h2>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
         {error && (
-          <div className="mb-4 p-2 text-sm text-red-700 bg-red-100 rounded-md">
+          <div className="p-2 mb-4 text-sm text-red-700 bg-red-100 rounded-md">
             {error}
           </div>
         )}
@@ -143,7 +145,7 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
             />
           </div>
@@ -155,7 +157,7 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
             />
           </div>
@@ -167,7 +169,7 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
             />
           </div>
@@ -179,13 +181,13 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+            <label className="block mb-1 text-sm font-medium text-gray-700">Account Type</label>
             <div className="flex space-x-4">
               <div className="flex items-center">
                 <input
@@ -195,9 +197,9 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                   value="user"
                   checked={role === 'user'}
                   onChange={() => setRole('user')}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
                 />
-                <label htmlFor="user-role" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="user-role" className="block ml-2 text-sm text-gray-700">
                   Job Seeker
                 </label>
               </div>
@@ -209,9 +211,9 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                   value="recruiter"
                   checked={role === 'recruiter'}
                   onChange={() => setRole('recruiter')}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
                 />
-                <label htmlFor="recruiter-role" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="recruiter-role" className="block ml-2 text-sm text-gray-700">
                   Recruiter
                 </label>
               </div>
@@ -228,16 +230,16 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               accept="image/*"
               className="hidden"
             />
-            <div className="mt-1 flex items-center">
-              <div className="flex-shrink-0 h-16 w-16 border border-gray-300 rounded-full overflow-hidden bg-gray-100">
+            <div className="flex items-center mt-1">
+              <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 border border-gray-300 rounded-full">
                 {profileImage ? (
                   <img
                     src={URL.createObjectURL(profileImage)}
                     alt="Profile Preview"
-                    className="h-full w-full object-cover"
+                    className="object-cover w-full h-full"
                   />
                 ) : (
-                  <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-full h-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 )}
@@ -245,7 +247,7 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               <button
                 type="button"
                 onClick={() => profileInputRef.current.click()}
-                className="ml-4 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                className="px-3 py-2 ml-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
                 Upload Image
               </button>
@@ -272,17 +274,17 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               accept=".pdf,.doc,.docx"
               className="hidden"
             />
-            <div className="mt-1 flex items-center">
+            <div className="flex items-center mt-1">
               <button
                 type="button"
                 onClick={() => resumeInputRef.current.click()}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
                 Upload Resume
               </button>
               {resume && (
-                <div className="ml-3 flex items-center">
-                  <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <div className="flex items-center ml-3">
+                  <svg className="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-1 text-sm text-gray-700">{resume.name}</span>
@@ -302,7 +304,7 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Creating Account...' : 'Sign Up'}
           </button>
@@ -321,6 +323,9 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
         </div>
       </div>
     </div>
+    
+    
+    
   );
 };
 
