@@ -34,6 +34,12 @@ const Navbar = () => {
     setProfileImageError(true);
   };
 
+  // Check if user is a job seeker (role is 'user')
+  const isJobSeeker = user?.role === 'user';
+  
+  // Check if user is a recruiter
+  const isRecruiter = user?.role === 'recruiter';
+
   return (
     <div className='px-6 py-4 flex flex-row justify-between items-center shadow-sm'>
       {/* Left - Logo */}
@@ -45,9 +51,12 @@ const Navbar = () => {
       <div className=''>
         {user ? (
           <div className='flex items-center gap-4'>
-            <Link to='/applications' className='hidden text-gray-600 sm:block hover:text-gray-800'>
-              Applications
-            </Link>
+            {/* Only show Applications link in top nav for job seekers */}
+            {!isRecruiter && (
+              <Link to='/applications' className='hidden text-gray-600 sm:block hover:text-gray-800'>
+                Applications
+              </Link>
+            )}
             <div className='relative group'>
               <div className='flex items-center cursor-pointer gap-2'>
                 <div className='w-10 h-10 overflow-hidden rounded-full'>
@@ -69,13 +78,19 @@ const Navbar = () => {
                 <Link to='/profile' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
                   Profile
                 </Link>
-                <Link to='/applications' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
-                  Applications
-                </Link>
+                {/* Only show Applications in dropdown for job seekers */}
+                {!isRecruiter && (
+                  <Link to='/applications' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
+                    Applications
+                  </Link>
+                )}
                 <div className='border-t my-1'></div>
-                <Link to='/dashboard' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
-                  Dashboard
-                </Link>
+                {/* Only show Dashboard for recruiters */}
+                {!isJobSeeker && (
+                  <Link to='/dashboard' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
+                    Dashboard
+                  </Link>
+                )}
                 <div className='border-t my-1'></div>
                 <button
                   onClick={handleLogout}

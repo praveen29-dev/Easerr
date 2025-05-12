@@ -104,8 +104,11 @@ export const getJobApplications = async (req, res) => {
       });
     }
 
-    // Build query
-    const queryObject = { job: jobId };
+    // Build base query for all job applications (for counting)
+    const baseQueryObject = { job: jobId };
+    
+    // Build query for filtered applications
+    const queryObject = { ...baseQueryObject };
     
     // Filter by status
     if (status && status !== 'all') {
@@ -135,13 +138,34 @@ export const getJobApplications = async (req, res) => {
     // Get total applications count for pagination
     const totalApplications = await Application.countDocuments(queryObject);
     const numOfPages = Math.ceil(totalApplications / Number(limit));
+    
+    // Get status counts for filtering
+    const statusCounts = await Application.aggregate([
+      { $match: baseQueryObject },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    // Format status counts
+    const formattedStatusCounts = {
+      total: await Application.countDocuments(baseQueryObject),
+      pending: 0,
+      reviewed: 0,
+      shortlisted: 0,
+      rejected: 0,
+      hired: 0
+    };
+
+    statusCounts.forEach(status => {
+      formattedStatusCounts[status._id] = status.count;
+    });
 
     res.status(StatusCodes.OK).json({
       success: true,
       applications,
       totalApplications,
       numOfPages,
-      currentPage: Number(page)
+      currentPage: Number(page),
+      statusCounts: formattedStatusCounts
     });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

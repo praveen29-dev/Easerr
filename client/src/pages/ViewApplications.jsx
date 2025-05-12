@@ -15,6 +15,7 @@ const statusColors = {
 };
 
 const ViewApplications = () => {
+  // Use jobId from URL params
   const { jobId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -179,6 +180,16 @@ const ViewApplications = () => {
   }
 
   const { applications = [], totalApplications = 0, numOfPages = 1, currentPage = 1, statusCounts = {} } = applicationsData;
+  // Ensure all status counts have default values
+  const defaultStatusCounts = {
+    total: 0,
+    pending: 0,
+    reviewed: 0,
+    shortlisted: 0, 
+    rejected: 0,
+    hired: 0,
+    ...statusCounts
+  };
   const { job } = jobData;
 
   return (
@@ -235,37 +246,37 @@ const ViewApplications = () => {
             className={`px-4 py-3 font-medium ${filters.status === 'all' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
             onClick={() => handleStatusFilter('all')}
           >
-            All ({statusCounts?.total || 0})
+            All ({defaultStatusCounts.total})
           </button>
           <button
             className={`px-4 py-3 font-medium ${filters.status === 'pending' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
             onClick={() => handleStatusFilter('pending')}
           >
-            Pending ({statusCounts?.pending || 0})
+            Pending ({defaultStatusCounts.pending})
           </button>
           <button
             className={`px-4 py-3 font-medium ${filters.status === 'reviewed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
             onClick={() => handleStatusFilter('reviewed')}
           >
-            Reviewed ({statusCounts?.reviewed || 0})
+            Reviewed ({defaultStatusCounts.reviewed})
           </button>
           <button
             className={`px-4 py-3 font-medium ${filters.status === 'shortlisted' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
             onClick={() => handleStatusFilter('shortlisted')}
           >
-            Shortlisted ({statusCounts?.shortlisted || 0})
+            Shortlisted ({defaultStatusCounts.shortlisted})
           </button>
           <button
             className={`px-4 py-3 font-medium ${filters.status === 'rejected' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
             onClick={() => handleStatusFilter('rejected')}
           >
-            Rejected ({statusCounts?.rejected || 0})
+            Rejected ({defaultStatusCounts.rejected})
           </button>
           <button
             className={`px-4 py-3 font-medium ${filters.status === 'hired' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
             onClick={() => handleStatusFilter('hired')}
           >
-            Hired ({statusCounts?.hired || 0})
+            Hired ({defaultStatusCounts.hired})
           </button>
         </div>
 

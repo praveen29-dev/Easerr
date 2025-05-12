@@ -165,7 +165,7 @@ export const updateApplicationStatus = async ({ id, status, notes }) => {
     }
     
     // Validate status
-    const validStatuses = ['pending', 'reviewing', 'rejected', 'shortlisted', 'accepted'];
+    const validStatuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'hired'];
     if (!validStatuses.includes(status)) {
       throw new Error('Invalid status value');
     }
