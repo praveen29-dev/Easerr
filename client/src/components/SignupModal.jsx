@@ -1,14 +1,21 @@
 import { useState, useRef } from 'react';
+import { FaTimes, FaExclamation } from 'react-icons/fa';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import logo from '../assets/Logo-white.png';
 import { useAuth } from '../context/AuthContext';
 
 const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    name: '',
+    password: '',
+    confirmPassword: '',
+    role: 'user'
+  });
   const [profileImage, setProfileImage] = useState(null);
   const [resume, setResume] = useState(null);
-  const [role, setRole] = useState('user'); // Default role is user
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -17,29 +24,37 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   
   const { signup } = useAuth();
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
-    if (!email || !name || !password || !confirmPassword) {
+    if (!formData.email || !formData.name || !formData.password || !formData.confirmPassword) {
       setError('All fields are required');
       return;
     }
     
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
     
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');
       return;
     }
     
     // Validate password strength
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       return;
     }
@@ -47,25 +62,20 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
     setIsSubmitting(true);
     
     try {
-      // Prepare user data for signup
       const userData = {
-        name,
-        email,
-        password,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
         profileImage,
         resume,
-        role
+        role: formData.role
       };
       
       await signup(userData);
       setError('');
       onClose();
     } catch (err) {
-      if (err && err.message === 'User already exists with this email') {
-        setError('Email already in use. Please use a different email or login.');
-      } else {
-        setError(err?.message || 'Failed to create account. Please try again.');
-      }
+      setError(err?.message || 'Failed to create account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -74,18 +84,14 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please upload a valid image file');
         return;
       }
-      
-      // Validate file size (3MB max)
       if (file.size > 3 * 1024 * 1024) {
         setError('Profile image must be less than 3MB');
         return;
       }
-      
       setProfileImage(file);
       setError('');
     }
@@ -94,19 +100,15 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const handleResumeChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       if (!validTypes.includes(file.type)) {
         setError('Please upload a PDF or Word document');
         return;
       }
-      
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         setError('Resume must be less than 5MB');
         return;
       }
-      
       setResume(file);
       setError('');
     }
@@ -115,217 +117,198 @@ const SignupModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   if (!isOpen) return null;
 
   return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Blurred background overlay */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose}></div>
+      
+      <div className="relative bg-white rounded-lg w-full max-w-5xl h-[700px] flex overflow-hidden">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute z-10 text-gray-500 top-4 right-4 hover:text-gray-700"
+        >
+          <FaTimes size={24} />
+        </button>
 
-
-      <div className="fixed inset-0 z-50 flex items-center justify-center pt-2 bg-black bg-opacity-50" >
-      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
-        <div className="flex items-center justify-between mb-4 ">
-          <h2 className="text-2xl font-bold text-gray-800 ">Create your account</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        {error && (
-          <div className="p-2 mb-4 text-sm text-red-700 bg-red-100 rounded-md">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Left Section */}
+        <div className="flex flex-col justify-between w-5/12 p-12 text-white bg-gradient-to-br from-purple-600 to-blue-500">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
+            <img src={logo} alt="Easerr Logo" className="w-16 h-16 p-2 rounded-lg" />
           </div>
-          
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">Account Type</label>
-            <div className="flex space-x-4">
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="user-role"
-                  name="role"
-                  value="user"
-                  checked={role === 'user'}
-                  onChange={() => setRole('user')}
-                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label htmlFor="user-role" className="block ml-2 text-sm text-gray-700">
-                  Job Seeker
-                </label>
+          <div className="space-y-6">
+            <h1 className="text-4xl font-bold leading-tight">
+              Join our<br />
+              community and<br />
+              unlock new<br />
+              opportunities.
+            </h1>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-white rounded-full">
+                <FaExclamation className="text-xl text-purple-600" />
               </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="recruiter-role"
-                  name="role"
-                  value="recruiter"
-                  checked={role === 'recruiter'}
-                  onChange={() => setRole('recruiter')}
-                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label htmlFor="recruiter-role" className="block ml-2 text-sm text-gray-700">
-                  Recruiter
-                </label>
+              <div>
+                <p className="font-medium">Connecting Talent,</p>
+                <p className="font-medium">Creating Opportunities.</p>
               </div>
             </div>
           </div>
-          
-          {/* Profile Image Upload */}
+          <div></div>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex flex-col justify-between w-7/12 p-12 overflow-y-auto">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Profile Image</label>
-            <input
-              type="file"
-              ref={profileInputRef}
-              onChange={handleProfileImageChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <div className="flex items-center mt-1">
-              <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 border border-gray-300 rounded-full">
-                {profileImage ? (
-                  <img
-                    src={URL.createObjectURL(profileImage)}
-                    alt="Profile Preview"
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <svg className="w-full h-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                )}
+            <h2 className="mb-8 text-2xl font-bold">Create your account</h2>
+            
+            {error && (
+              <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                {error}
               </div>
-              <button
-                type="button"
-                onClick={() => profileInputRef.current.click()}
-                className="px-3 py-2 ml-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                Upload Image
-              </button>
-              {profileImage && (
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:border-purple-500 focus:bg-white focus:ring-0"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:border-purple-500 focus:bg-white focus:ring-0"
+                />
+              </div>
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:border-purple-500 focus:bg-white focus:ring-0"
+                />
                 <button
                   type="button"
-                  onClick={() => setProfileImage(null)}
-                  className="ml-2 text-sm text-red-600 hover:text-red-800"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute text-gray-500 transform -translate-y-1/2 right-3 top-1/2"
                 >
-                  Remove
+                  {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                 </button>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-gray-500">JPG, PNG or GIF files. Max 3MB.</p>
-          </div>
-          
-          {/* Resume Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Resume</label>
-            <input
-              type="file"
-              ref={resumeInputRef}
-              onChange={handleResumeChange}
-              accept=".pdf,.doc,.docx"
-              className="hidden"
-            />
-            <div className="flex items-center mt-1">
+              </div>
+
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-100 border-transparent rounded-lg focus:border-purple-500 focus:bg-white focus:ring-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute text-gray-500 transform -translate-y-1/2 right-3 top-1/2"
+                >
+                  {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                </button>
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'user' }))}
+                  className={`flex-1 py-3 px-4 rounded-lg border ${
+                    formData.role === 'user'
+                      ? 'bg-purple-600 text-white border-transparent'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Job Seeker
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'recruiter' }))}
+                  className={`flex-1 py-3 px-4 rounded-lg border ${
+                    formData.role === 'recruiter'
+                      ? 'bg-purple-600 text-white border-transparent'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Recruiter
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <button
+                  type="button"
+                  onClick={() => profileInputRef.current.click()}
+                  className="flex-1 px-4 py-3 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none"
+                >
+                  {profileImage ? 'Change Profile Picture' : 'Upload Profile Picture'}
+                </button>
+                <input
+                  type="file"
+                  ref={profileInputRef}
+                  onChange={handleProfileImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                {formData.role === 'user' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => resumeInputRef.current.click()}
+                      className="flex-1 px-4 py-3 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none"
+                    >
+                      {resume ? 'Change Resume' : 'Upload Resume'}
+                    </button>
+                    <input
+                      type="file"
+                      ref={resumeInputRef}
+                      onChange={handleResumeChange}
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                    />
+                  </>
+                )}
+              </div>
+
               <button
-                type="button"
-                onClick={() => resumeInputRef.current.click()}
-                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3 text-white transition-colors bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50"
               >
-                Upload Resume
+                {isSubmitting ? 'Creating Account...' : 'Sign Up'}
               </button>
-              {resume && (
-                <div className="flex items-center ml-3">
-                  <svg className="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="ml-1 text-sm text-gray-700">{resume.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setResume(null)}
-                    className="ml-2 text-sm text-red-600 hover:text-red-800"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-gray-500">PDF or Word files. Max 5MB.</p>
+            </form>
           </div>
-          
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
-        
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <button
-              onClick={onSwitchToLogin}
-              className="font-medium text-purple-600 hover:text-purple-500"
-            >
-              Login
-            </button>
-          </p>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-500">
+              Already have an account?{' '}
+              <button onClick={onSwitchToLogin} className="font-medium text-purple-600 hover:text-purple-700">
+                Sign in
+              </button>
+            </p>
+            <p className="mt-8 text-sm text-gray-400">
+              All rights reserved © Easerr
+            </p>
+          </div>
         </div>
       </div>
     </div>
-    
-    
-    
   );
 };
 
