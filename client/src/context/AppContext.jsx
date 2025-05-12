@@ -29,10 +29,10 @@ export const AppContextProvider = (props) => {
         queryFn: async () => {
             try {
                 // Create a params object specifically for the API
-                // Mapping frontend job types to backend categories if needed
+                // Mapping frontend job types to backend categories
                 const apiParams = {
                     ...jobsParams,
-                    // Backend might use different field names, adapt as needed
+                    // Backend uses 'category' instead of 'jobType'
                     category: jobsParams.jobType || undefined,
                 };
                 

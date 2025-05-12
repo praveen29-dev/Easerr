@@ -58,6 +58,7 @@ export const getAllJobs = async ({
   search = '',
   location = '',
   jobType = '',
+  category = '',  // Allow either jobType or category
   skills = [],
   minSalary = '',
   maxSalary = '',
@@ -67,11 +68,14 @@ export const getAllJobs = async ({
   limit = 10
 }) => {
   try {
+    // Use either category or jobType, with category taking precedence
+    const effectiveCategory = category || jobType;
+    
     const response = await api.get('/jobs', {
       params: {
         search,
         location,
-        jobType,
+        category: effectiveCategory,  // Send as category to match backend expectations
         ...(skills.length > 0 && { skills: skills.join(',') }),
         ...(minSalary && { minSalary }),
         ...(maxSalary && { maxSalary }),
