@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        myfont: ['"main-font"', 'sans-serif'], 
+        'ibrand': ['IBrand', 'sans-serif'],
       },
     },
   },

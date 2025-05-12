@@ -61,7 +61,7 @@ const Hero = () => {
     return (
         <div className="container mx-auto my-10 2xl:px-20">
             <div className="py-32 mx-2 text-center text-white bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl">
-                <h2 className="mb-4 text-2xl font-medium main-font md:text-3xl lg:text-6xl">
+                <h2 className="mb-4 text-2xl font-ibrand md:text-3xl lg:text-6xl">
                     Find the job that fits your life
                 </h2>
                 <p className="max-w-xl px-0 mx-auto mb-8 text-lg font-light">
