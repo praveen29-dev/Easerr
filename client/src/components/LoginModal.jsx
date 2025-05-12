@@ -1,28 +1,42 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { FaExclamation, FaTimes } from 'react-icons/fa';
+import logo from '../assets/Logo-white.png';
 import { useAuth } from '../context/AuthContext';
 import ForgotPasswordModal from './ForgotPasswordModal';
 
 const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   
   const { login } = useAuth();
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
-    if (!email || !password) {
+    if (!formData.email || !formData.password) {
       setError('All fields are required');
       return;
     }
     
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');
       return;
     }
@@ -30,7 +44,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
     setIsSubmitting(true);
     
     try {
-      await login(email, password);
+      await login(formData.email, formData.password);
       setError('');
       onClose();
     } catch (err) {
@@ -55,79 +69,100 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Login</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      {/* Blurred background overlay */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose}></div>
+      
+      <div className="relative bg-white rounded-lg w-full max-w-4xl h-[600px] flex overflow-hidden">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10"
+        >
+          <FaTimes size={24} />
+        </button>
         
-        {error && (
-          <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Left Section */}
+        <div className="w-1/2 bg-gradient-to-br from-purple-600 to-blue-500 p-12 flex flex-col justify-between text-white">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
+            <img src={logo} alt="Easerr Logo" className="w-16 h-16 rounded-lg p-2" />
           </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-            <div className="mt-1 text-right">
-              <button
-                type="button"
-                onClick={openForgotPassword}
-                className="text-xs font-medium text-purple-600 hover:text-purple-500"
-              >
-                Forgot password?
-              </button>
+          <div className="space-y-6">
+            <h1 className="text-4xl font-bold leading-tight">
+              Welcome back!<br />
+              Let's get<br />
+              you closer to your<br />
+              goals.
+            </h1>
+            <div className="flex items-center space-x-3">
+              <div className="bg-white rounded-full p-2">
+                <FaExclamation className="text-purple-600 text-xl" />
+              </div>
+              <div>
+                <p className="font-medium">Connecting Talent,</p>
+                <p className="font-medium">Creating Opportunities.</p>
+              </div>
             </div>
           </div>
-          
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <button
-              onClick={onSwitchToSignup}
-              className="font-medium text-purple-600 hover:text-purple-500"
-            >
-              Sign Up
-            </button>
-          </p>
+          <div></div>
+        </div>
+
+        {/* Right Section */}
+        <div className="w-1/2 p-12 flex flex-col justify-between">
+          <div>
+            <h2 className="text-2xl font-bold mb-8">Let's Get Started</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <input
+                  type="text"
+                  name="email"
+                  placeholder="Email address or mobile number"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg bg-gray-100 border-transparent focus:border-purple-500 focus:bg-white focus:ring-0"
+                />
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg bg-gray-100 border-transparent focus:border-purple-500 focus:bg-white focus:ring-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                >
+                  {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                </button>
+              </div>
+              <div className="text-right">
+                <a href="#" className="text-sm text-gray-500 hover:text-purple-600" onClick={openForgotPassword}>
+                  Forgot Password?
+                </a>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                {isSubmitting ? 'Logging in...' : 'Sign In'}
+              </button>
+            </form>
+          </div>
+          <div className="text-center">
+            <p className="text-gray-500">
+              Don't have an account?{' '}
+              <a href="#" className="text-purple-600 font-medium hover:text-purple-700" onClick={onSwitchToSignup}>
+                Sign up
+              </a>
+            </p>
+            <p className="text-sm text-gray-400 mt-8">
+              All rights reserved © Easerr
+            </p>
+          </div>
         </div>
       </div>
 
