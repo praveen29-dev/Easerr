@@ -13,7 +13,6 @@ const applicationSchema = new mongoose.Schema({
   },
   resume: {
     type: String,
-    required: [true, 'Resume is required'],
   },
   coverLetter: {
     type: String,

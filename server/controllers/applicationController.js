@@ -6,7 +6,10 @@ import mongoose from 'mongoose';
 // Submit a job application
 export const submitApplication = async (req, res) => {
   try {
-    const { jobId, coverLetter, resume } = req.body;
+    const { jobId, coverLetter } = req.body;
+    
+    console.log('Application request body:', req.body);
+    console.log('Files received:', req.files);
 
     // Check if job exists and is active
     const job = await Job.findOne({ _id: jobId, status: 'active' });
@@ -31,12 +34,38 @@ export const submitApplication = async (req, res) => {
       });
     }
 
+    // Handle resume file upload if provided
+    let resumeUrl = '';
+    if (req.files && req.files.resume) {
+      const resumeFile = req.files.resume;
+      
+      // Basic validation for file type
+      const fileExtension = resumeFile.name.split('.').pop().toLowerCase();
+      const allowedExtensions = ['pdf', 'doc', 'docx'];
+      
+      if (!allowedExtensions.includes(fileExtension)) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: 'Resume must be a PDF or Word document'
+        });
+      }
+      
+      // Generate a unique filename
+      const uniqueFilename = `${Date.now()}-${Math.round(Math.random() * 1E9)}-${resumeFile.name}`;
+      
+      // Move file to upload directory (this should be cloud storage in production)
+      await resumeFile.mv(`uploads/${uniqueFilename}`);
+      
+      // Store the file path in the database
+      resumeUrl = `/uploads/${uniqueFilename}`;
+    }
+
     // Create new application
     const application = await Application.create({
       job: jobId,
       applicant: req.user.userId,
-      resume,
-      coverLetter,
+      resume: resumeUrl,
+      coverLetter: coverLetter || '',
     });
 
     // Increment the application count in the job document
@@ -48,6 +77,7 @@ export const submitApplication = async (req, res) => {
       application
     });
   } catch (error) {
+    console.error('Application submission error:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message

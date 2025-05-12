@@ -51,12 +51,18 @@ export const submitApplication = async (applicationData, resumeFile) => {
     // Use FormData for file upload
     const formData = new FormData();
     formData.append('jobId', applicationData.jobId);
-    formData.append('coverLetter', applicationData.coverLetter);
+    formData.append('coverLetter', applicationData.coverLetter || '');
     
     if (resumeFile) {
+      // The backend expects the file with name 'resume'
       formData.append('resume', resumeFile);
     }
     
+    // Log formData for debugging
+    console.log('Submitting application with data:', 
+      {jobId: applicationData.jobId, coverLetter: applicationData.coverLetter});
+    
+    // Make sure content type is set to multipart/form-data and let the browser set the boundary
     const response = await api.post('/applications', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -64,6 +70,7 @@ export const submitApplication = async (applicationData, resumeFile) => {
     });
     return response.data;
   } catch (error) {
+    console.error('Application submission error:', error);
     throw new Error(error.response?.data?.message || 'Failed to submit application');
   }
 };

@@ -19,6 +19,7 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
     if (isOpen) {
       setCoverLetter('');
       setResumeFile(null);
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -57,17 +58,23 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
 
   // Application submission mutation
   const applicationMutation = useMutation({
-    mutationFn: ({ applicationData, resumeFile }) => 
-      submitApplication(applicationData, resumeFile),
-    onSuccess: () => {
+    mutationFn: ({ applicationData, resumeFile }) => {
+      console.log('Submitting application with:', applicationData, resumeFile);
+      return submitApplication(applicationData, resumeFile);
+    },
+    onSuccess: (response) => {
+      console.log('Application submitted successfully:', response);
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['userApplications'] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast.success('Application submitted successfully!');
+      setIsSubmitting(false);
+      onClose();
       // Navigate to applications page
       navigate('/applications');
     },
     onError: (error) => {
+      console.error('Application submission error:', error);
       toast.error(error.message || 'Failed to submit application');
       setIsSubmitting(false);
     }
@@ -88,7 +95,7 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
     // Prepare application data
     const applicationData = {
       jobId: jobId,
-      coverLetter
+      coverLetter: coverLetter || ''
     };
 
     // Submit the application
