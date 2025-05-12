@@ -23,10 +23,35 @@ export const AppContextProvider = (props) => {
         limit: 20
     })
 
+    // Add safeguards to handle API response
     const { data: jobsData, isLoading, error } = useQuery({
         queryKey: ['jobs', jobsParams],
-        queryFn: () => getAllJobs(jobsParams),
-        keepPreviousData: true
+        queryFn: async () => {
+            try {
+                const response = await getAllJobs(jobsParams);
+                
+                // Ensure the response is well-formed
+                if (!response || typeof response !== 'object') {
+                    throw new Error('Invalid API response format');
+                }
+                
+                // Add safety checks for response structure
+                const jobs = Array.isArray(response.jobs) ? response.jobs : [];
+                const totalJobs = typeof response.totalJobs === 'number' ? response.totalJobs : 0;
+                
+                return {
+                    ...response,
+                    jobs,
+                    totalJobs,
+                };
+            } catch (err) {
+                console.error('Error fetching jobs:', err);
+                throw err;
+            }
+        },
+        keepPreviousData: true,
+        retry: 1,
+        staleTime: 30000, // 30 seconds
     })
 
     // Set search params whenever searchFilter changes
