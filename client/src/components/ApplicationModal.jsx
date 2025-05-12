@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { submitApplication, getUserApplications } from '../api/applicationApi';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { assets } from '../assets/assets';
 
 /**
  * Modal component for confirming and submitting job applications
@@ -14,12 +16,24 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
   const [resumeFile, setResumeFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const { user, isAuthenticated, openLoginModal } = useAuth();
+  
+  // If not authenticated and modal is open, open login modal
+  useEffect(() => {
+    if (isOpen && !isAuthenticated) {
+      // Close this modal first
+      onClose();
+      // Open login modal instead of redirecting
+      openLoginModal();
+      toast.error('Please log in to apply for jobs');
+    }
+  }, [isOpen, isAuthenticated, navigate, onClose, openLoginModal]);
 
   // Fetch user's applications to check if already applied to this job
   const { data: applicationsData } = useQuery({
     queryKey: ['userApplications', { limit: 100 }],
     queryFn: () => getUserApplications({ limit: 100 }),
-    enabled: isOpen && !!jobId,
+    enabled: isOpen && !!jobId && isAuthenticated,
   });
 
   // Check if user has already applied for this job
@@ -128,14 +142,44 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
       coverLetter: coverLetter || ''
     };
 
-    // Submit the application
+    // Submit the application with resume from form or user profile
     applicationMutation.mutate({ 
       applicationData, 
-      resumeFile 
+      resumeFile: resumeFile || null  // Let the backend use profile resume if no file is uploaded
     });
   };
 
-  if (!isOpen) return null;
+  // If not authenticated or modal not open, don't render
+  if (!isOpen || !isAuthenticated) return null;
+
+  // Get user profile image
+  const getUserImage = () => {
+    if (user?.profileImage) return user.profileImage;
+    if (user?.image) return user.image;
+    if (user?.photoURL) return user.photoURL;
+    return assets.person_icon;
+  };
+
+  // Get user's resume info
+  const getUserResumeInfo = () => {
+    if (user?.resume) {
+      // Extract filename from path - simplify to just show "resume.pdf" regardless of actual name
+      const resumePath = user.resume;
+      // Get file extension
+      const fileExtension = resumePath.toLowerCase().endsWith('.pdf') ? 'pdf' : 
+                            resumePath.toLowerCase().endsWith('.doc') ? 'doc' : 
+                            resumePath.toLowerCase().endsWith('.docx') ? 'docx' : 'pdf';
+      
+      return {
+        exists: true,
+        url: resumePath,
+        fileName: `resume.${fileExtension}`
+      };
+    }
+    return { exists: false };
+  };
+
+  const userResumeInfo = getUserResumeInfo();
 
   return (
     <div 
@@ -154,6 +198,24 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
+        </div>
+        
+        {/* User info section */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center">
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border border-gray-300">
+              <img 
+                src={getUserImage()} 
+                alt={user?.name || 'User'} 
+                className="w-full h-full object-cover"
+                onError={(e) => {e.target.src = assets.person_icon}}
+              />
+            </div>
+            <div className="ml-4">
+              <p className="font-medium text-gray-800">{user?.name || 'User'}</p>
+              <p className="text-sm text-gray-600">{user?.email}</p>
+            </div>
+          </div>
         </div>
         
         <div className="mb-4">
@@ -186,6 +248,51 @@ const ApplicationModal = ({ isOpen, onClose, jobId, jobTitle }) => {
               <label htmlFor="resume" className="block mb-2 text-sm font-medium text-gray-700">
                 Resume/CV (PDF, DOC, DOCX)
               </label>
+              
+              {userResumeInfo.exists && (
+                <div className="mb-2 p-3 bg-blue-50 rounded-md border border-blue-200">
+                  <div className="flex items-center">
+                    <a 
+                      href={userResumeInfo.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-700 hover:text-blue-900 transition-colors group"
+                    >
+                      {/* PDF document icon */}
+                      <div className="flex-shrink-0 w-9 h-12 mr-3 relative bg-red-600 rounded-sm overflow-hidden shadow-md border border-gray-200 group-hover:shadow-lg transition-shadow">
+                        {/* Dog-ear corner */}
+                        <div className="absolute right-0 top-0 w-0 h-0 border-t-8 border-r-8 border-t-white border-r-white"></div>
+                        
+                        {/* PDF lines */}
+                        <div className="absolute top-5 left-0 right-0 flex flex-col items-center">
+                          <div className="w-5 h-0.5 bg-white mb-1 rounded-full opacity-80"></div>
+                          <div className="w-5 h-0.5 bg-white mb-1 rounded-full opacity-80"></div>
+                          <div className="w-4 h-0.5 bg-white rounded-full opacity-80"></div>
+                        </div>
+                        
+                        {/* File type label */}
+                        <div className="absolute bottom-0 left-0 right-0 text-[8px] font-bold text-white text-center pb-1 bg-red-700 bg-opacity-50">
+                          {userResumeInfo.fileName.split('.').pop().toUpperCase()}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm flex items-center">
+                          Resume 
+                          <svg className="w-3.5 h-3.5 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                          </svg>
+                        </span>
+                        <span className="text-xs text-gray-600">Click to preview</span>
+                      </div>
+                    </a>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600 pl-12">
+                    We'll use this resume from your profile unless you upload a new one below.
+                  </div>
+                </div>
+              )}
+              
               <input
                 type="file"
                 id="resume"

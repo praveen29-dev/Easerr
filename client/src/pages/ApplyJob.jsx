@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import Navbar from '../components/Navbar'
 import Loading from '../components/Loading'
@@ -11,19 +11,24 @@ import Footer from '../components/Footer'
 import ApplicationModal from '../components/ApplicationModal'
 import { useQuery } from '@tanstack/react-query'
 import { getUserApplications } from '../api/applicationApi'
+import { useAuth } from '../context/AuthContext'
+import { toast } from 'react-hot-toast'
 
 const ApplyJob = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [jobData, setJobData] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { jobs } = useContext(AppContext)
   const [hasApplied, setHasApplied] = useState(false)
+  const { isAuthenticated, openLoginModal } = useAuth()
   
   // Fetch user's applications to check if already applied
   const { data: applicationsData } = useQuery({
     queryKey: ['userApplications', { limit: 100 }],
     queryFn: () => getUserApplications({ limit: 100 }),
+    enabled: isAuthenticated // Only run if authenticated
   })
 
   useEffect(() => {
@@ -49,6 +54,14 @@ const ApplyJob = () => {
   }, [applicationsData, id])
 
   const handleOpenModal = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      // Open login modal instead of redirecting
+      openLoginModal()
+      toast.error('Please log in to apply for this job')
+      return
+    }
+    
     setIsModalOpen(true)
   }
 
@@ -91,7 +104,7 @@ const ApplyJob = () => {
             </div>
             </div>
             <div className='flex flex-col justify-center text-sm text-end max-md:mx-auto max-md:text-center'>
-            {hasApplied ? (
+            {isAuthenticated && hasApplied ? (
               <button 
                 className='p-2.5 px-10 text-white bg-green-600 rounded hover:bg-green-700 transition-colors'
                 onClick={handleViewApplications}
@@ -114,7 +127,7 @@ const ApplyJob = () => {
           <div className='w-full lg:w-2/3'>
             <h2 className='mb-4 text-2xl font-bold'>Job Description</h2>
             <div className='rich-text' dangerouslySetInnerHTML={{__html: jobData.description || 'No description available'}}></div>
-            {hasApplied ? (
+            {isAuthenticated && hasApplied ? (
               <button 
                 className='p-2.5 px-10 mt-10 text-white bg-green-600 rounded hover:bg-green-700 transition-colors'
                 onClick={handleViewApplications}

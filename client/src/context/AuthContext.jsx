@@ -11,11 +11,34 @@ export const AuthProvider = ({ children }) => {
   const registerMutation = useRegister();
   const logoutMutation = useLogout();
   const updateProfileMutation = useUpdateProfile();
+  
+  // Add state for controlling login modal
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  
+  // Function to open login modal
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+    setIsSignupModalOpen(false);
+  };
+  
+  // Function to open signup modal
+  const openSignupModal = () => {
+    setIsSignupModalOpen(true);
+    setIsLoginModalOpen(false);
+  };
+  
+  // Function to close all auth modals
+  const closeAuthModals = () => {
+    setIsLoginModalOpen(false);
+    setIsSignupModalOpen(false);
+  };
 
   // Login function
   const login = async (email, password) => {
     try {
       await loginMutation.mutateAsync({ email, password });
+      closeAuthModals(); // Close modals on successful login
       return true;
     } catch (error) {
       console.error("Login error:", error);
@@ -27,6 +50,7 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       await registerMutation.mutateAsync(userData);
+      closeAuthModals(); // Close modals on successful signup
       return true;
     } catch (error) {
       console.error("Signup error:", error);
@@ -78,7 +102,13 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         logout,
         resetPassword,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        // Add login modal controls to context
+        isLoginModalOpen,
+        isSignupModalOpen,
+        openLoginModal,
+        openSignupModal,
+        closeAuthModals
       }}
     >
       {children}

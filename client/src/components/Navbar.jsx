@@ -6,32 +6,24 @@ import LoginModal from './LoginModal'
 import SignupModal from './SignupModal'
 
 const Navbar = () => {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
   
-  const { user, logout } = useAuth();
+  const { 
+    user, 
+    logout, 
+    isLoginModalOpen, 
+    isSignupModalOpen, 
+    openLoginModal, 
+    openSignupModal, 
+    closeAuthModals 
+  } = useAuth();
+  
   const navigate = useNavigate();
   
   // Reset image error state when user changes
   useEffect(() => {
     setProfileImageError(false);
   }, [user]);
-  
-  const openLoginModal = () => {
-    setIsLoginModalOpen(true);
-    setIsSignupModalOpen(false);
-  };
-  
-  const openSignupModal = () => {
-    setIsSignupModalOpen(true);
-    setIsLoginModalOpen(false);
-  };
-  
-  const closeModals = () => {
-    setIsLoginModalOpen(false);
-    setIsSignupModalOpen(false);
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -43,48 +35,56 @@ const Navbar = () => {
   };
 
   return (
-    <div className='py-4 shadow 2xl:px-20"'>
-      <div className='container flex items-center justify-between px-4 mx-auto '>
-        <img onClick={() => navigate('/')} className='cursor-pointer' src={assets.logo} alt='Easerr Logo' />
-        
+    <div className='px-6 py-4 flex flex-row justify-between items-center shadow-sm'>
+      {/* Left - Logo */}
+      <a href='/'>
+        <img className='h-12' src={assets.logo} alt='Easerr' />
+      </a>
+
+      {/* Right - Login/Signup or User Menu */}
+      <div className=''>
         {user ? (
-          <div className='flex items-center gap-3'>
-            {user.role === 'recruiter' ? (
-              <>
-                <Link to='/dashboard' className='text-gray-700 hover:text-purple-600'>Dashboard</Link>
-                <p>|</p>
-              </>
-            ) : (
-              <>
-                <Link to='/applications' className='text-gray-700 hover:text-purple-600'>Applied Jobs</Link>
-                <p>|</p>
-              </>
-            )}
-            <p className='max-sm:hidden'>Hi, {user.name}</p>
-            <Link to="/profile">
-              {user.profileImageUrl && !profileImageError ? (
-                <div className='flex-shrink-0 w-8 h-8 overflow-hidden border border-gray-200 rounded-full'>
-                  <img 
-                    src={user.profileImageUrl} 
-                    alt={user.name} 
-                    className='object-cover w-full h-full'
-                    onError={handleImageError}
-                  />
-                </div>
-              ) : (
-                <div 
-                  className='flex items-center justify-center w-8 h-8 text-white bg-purple-600 rounded-full hover:bg-purple-700'
-                >
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-              )}
+          <div className='flex items-center gap-4'>
+            <Link to='/applications' className='hidden text-gray-600 sm:block hover:text-gray-800'>
+              Applications
             </Link>
-            <button 
-              onClick={handleLogout}
-              className='text-sm text-gray-600 hover:text-gray-800'
-            >
-              Logout
-            </button>
+            <div className='relative group'>
+              <div className='flex items-center cursor-pointer gap-2'>
+                <div className='w-10 h-10 overflow-hidden rounded-full'>
+                  {!profileImageError && user.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={user.name || 'User'}
+                      className='object-cover w-full h-full'
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <div className='flex items-center justify-center w-full h-full text-white bg-purple-600'>
+                      {user.name ? user.name[0].toUpperCase() : 'U'}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className='absolute right-0 z-10 invisible p-2 mt-2 bg-white border rounded shadow-lg opacity-0 w-36 group-hover:opacity-100 group-hover:visible transition-all'>
+                <Link to='/profile' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
+                  Profile
+                </Link>
+                <Link to='/applications' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
+                  Applications
+                </Link>
+                <div className='border-t my-1'></div>
+                <Link to='/dashboard' className='block p-2 text-gray-700 rounded hover:bg-gray-100'>
+                  Dashboard
+                </Link>
+                <div className='border-t my-1'></div>
+                <button
+                  onClick={handleLogout}
+                  className='block w-full p-2 text-left text-gray-700 rounded hover:bg-gray-100'
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className='flex gap-4 max-sm:text-xs'>
@@ -107,14 +107,14 @@ const Navbar = () => {
       {/* Login Modal */}
       <LoginModal 
         isOpen={isLoginModalOpen} 
-        onClose={closeModals}
+        onClose={closeAuthModals}
         onSwitchToSignup={openSignupModal}
       />
       
       {/* Signup Modal */}
       <SignupModal 
         isOpen={isSignupModalOpen} 
-        onClose={closeModals}
+        onClose={closeAuthModals}
         onSwitchToLogin={openLoginModal}
       />
     </div>
