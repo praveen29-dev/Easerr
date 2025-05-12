@@ -2,6 +2,29 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Create base axios instance with interceptors
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Helper function to validate MongoDB ObjectId
 const isValidObjectId = (id) => {
   if (!id) return false;
@@ -12,24 +35,30 @@ const isValidObjectId = (id) => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
 
-// Create a new job
+/**
+ * Create a new job posting
+ * @param {Object} jobData - Job data object
+ * @returns {Promise<Object>} Created job object with success status
+ */
 export const createJob = async (jobData) => {
   try {
-    const response = await axios.post(`${API_URL}/jobs`, jobData, {
-      withCredentials: true
-    });
+    const response = await api.post('/jobs', jobData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to create job');
   }
 };
 
-// Get all jobs with filtering, sorting, and pagination
+/**
+ * Get all active jobs with filtering options
+ * @param {Object} options - Filter, sort and pagination options
+ * @returns {Promise<Object>} Jobs array with pagination and success status
+ */
 export const getAllJobs = async ({
   search = '',
   location = '',
-  category = '',
-  level = '',
+  jobType = '',
+  skills = [],
   minSalary = '',
   maxSalary = '',
   status = 'active',
@@ -38,14 +67,14 @@ export const getAllJobs = async ({
   limit = 10
 }) => {
   try {
-    const response = await axios.get(`${API_URL}/jobs`, {
+    const response = await api.get('/jobs', {
       params: {
         search,
         location,
-        category,
-        level,
-        minSalary,
-        maxSalary,
+        jobType,
+        ...(skills.length > 0 && { skills: skills.join(',') }),
+        ...(minSalary && { minSalary }),
+        ...(maxSalary && { maxSalary }),
         status,
         sort,
         page,
@@ -58,7 +87,11 @@ export const getAllJobs = async ({
   }
 };
 
-// Get job by ID
+/**
+ * Get job details by ID
+ * @param {string} id - Job ID
+ * @returns {Promise<Object>} Job details with success status
+ */
 export const getJobById = async (id) => {
   try {
     // Validate job ID
@@ -66,15 +99,18 @@ export const getJobById = async (id) => {
       throw new Error('Invalid job ID');
     }
     
-    const response = await axios.get(`${API_URL}/jobs/${id}`);
+    const response = await api.get(`/jobs/${id}`);
     return response.data;
-    console.log("job data",response.data)
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch job');
   }
 };
 
-// Update job
+/**
+ * Update job details
+ * @param {Object} options - Options containing job ID and job data
+ * @returns {Promise<Object>} Updated job with success status
+ */
 export const updateJob = async ({ id, jobData }) => {
   try {
     // Validate job ID
@@ -82,25 +118,18 @@ export const updateJob = async ({ id, jobData }) => {
       throw new Error('Invalid job ID');
     }
     
-    console.log(`Sending PUT request to ${API_URL}/jobs/${id} with data:`, jobData);
-    
-    const response = await axios.put(`${API_URL}/jobs/${id}`, jobData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      withCredentials: true // This ensures cookies/auth are sent with the request
-    });
-    
-    console.log('Update job API response:', response.data);
+    const response = await api.put(`/jobs/${id}`, jobData);
     return response.data;
   } catch (error) {
-    console.error('Error in updateJob API call:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to update job');
   }
 };
 
-// Delete job
+/**
+ * Delete a job by ID
+ * @param {string} id - Job ID to delete
+ * @returns {Promise<Object>} Success status and message
+ */
 export const deleteJob = async (id) => {
   try {
     // Validate job ID
@@ -108,16 +137,18 @@ export const deleteJob = async (id) => {
       throw new Error('Invalid job ID');
     }
     
-    const response = await axios.delete(`${API_URL}/jobs/${id}`, {
-      withCredentials: true
-    });
+    const response = await api.delete(`/jobs/${id}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to delete job');
   }
 };
 
-// Get recruiter's jobs
+/**
+ * Get all jobs posted by the current recruiter
+ * @param {Object} options - Filter, sort and pagination options
+ * @returns {Promise<Object>} Jobs array with pagination and success status
+ */
 export const getRecruiterJobs = async ({
   status = 'all',
   search = '',
@@ -126,39 +157,39 @@ export const getRecruiterJobs = async ({
   limit = 10
 }) => {
   try {
-    const response = await axios.get(`${API_URL}/jobs/recruiter/jobs`, {
+    const response = await api.get('/jobs/recruiter/jobs', {
       params: {
         status,
         search,
         sort,
         page,
         limit
-      },
-      withCredentials: true
+      }
     });
     return response.data;
-    console.log("recruiter jobs",response.data)
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch recruiter jobs');
   }
 };
 
-// Get job statistics for recruiter dashboard
+/**
+ * Get recruiter's job statistics
+ * @returns {Promise<Object>} Job statistics data
+ */
 export const getJobStats = async () => {
   try {
-    console.log('Fetching job stats...');
-    const response = await axios.get(`${API_URL}/jobs/recruiter/stats`, {
-      withCredentials: true
-    });
-    console.log('Job stats API response:', response.data);
+    const response = await api.get('/jobs/recruiter/stats');
     return response.data;
   } catch (error) {
-    console.error('Error fetching job statistics:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Failed to fetch job statistics');
   }
 };
 
-// Change job status (active, closed, draft)
+/**
+ * Change job status (active/closed/draft)
+ * @param {Object} options - Job ID and new status
+ * @returns {Promise<Object>} Updated job with success status
+ */
 export const changeJobStatus = async ({ id, status }) => {
   try {
     // Validate job ID
@@ -172,9 +203,7 @@ export const changeJobStatus = async ({ id, status }) => {
       throw new Error('Invalid status value');
     }
     
-    const response = await axios.patch(`${API_URL}/jobs/${id}/status`, { status }, {
-      withCredentials: true
-    });
+    const response = await api.patch(`/jobs/${id}/status`, { status });
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to change job status');

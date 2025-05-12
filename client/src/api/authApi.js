@@ -23,7 +23,11 @@ api.interceptors.request.use(
   }
 );
 
-// Register a new user
+/**
+ * Register a new user
+ * @param {Object} userData - User registration data
+ * @returns {Promise<Object>} Response containing user data and token
+ */
 export const register = async (userData) => {
   try {
     const formData = new FormData();
@@ -32,7 +36,15 @@ export const register = async (userData) => {
     formData.append('name', userData.name);
     formData.append('email', userData.email);
     formData.append('password', userData.password);
-    formData.append('role', userData.role || 'user');
+    formData.append('role', userData.role || 'jobseeker');
+    
+    if (userData.company) {
+      formData.append('company', userData.company);
+    }
+    
+    if (userData.title) {
+      formData.append('title', userData.title);
+    }
     
     // Add files if provided
     if (userData.profileImage) {
@@ -60,7 +72,12 @@ export const register = async (userData) => {
   }
 };
 
-// Login user
+/**
+ * Login user
+ * @param {string} email - User email
+ * @param {string} password - User password
+ * @returns {Promise<Object>} Response containing user data and token
+ */
 export const login = async (email, password) => {
   try {
     const response = await api.post('/auth/login', { email, password });
@@ -76,7 +93,10 @@ export const login = async (email, password) => {
   }
 };
 
-// Logout user
+/**
+ * Logout user
+ * @returns {Promise<void>}
+ */
 export const logout = async () => {
   try {
     await api.post('/auth/logout');
@@ -87,7 +107,10 @@ export const logout = async () => {
   }
 };
 
-// Get current user
+/**
+ * Get current user profile
+ * @returns {Promise<Object>} User profile data
+ */
 export const getCurrentUser = async () => {
   try {
     const response = await api.get('/auth/profile');
@@ -98,7 +121,11 @@ export const getCurrentUser = async () => {
   }
 };
 
-// Update user profile
+/**
+ * Update user profile
+ * @param {Object} userData - User profile data to update
+ * @returns {Promise<Object>} Updated user data
+ */
 export const updateProfile = async (userData) => {
   try {
     const formData = new FormData();
@@ -106,7 +133,15 @@ export const updateProfile = async (userData) => {
     // Add text fields
     if (userData.name) formData.append('name', userData.name);
     if (userData.email) formData.append('email', userData.email);
-    if (userData.password) formData.append('password', userData.password);
+    if (userData.title) formData.append('title', userData.title);
+    if (userData.company) formData.append('company', userData.company);
+    
+    // Add skills if provided as array
+    if (userData.skills && Array.isArray(userData.skills)) {
+      userData.skills.forEach(skill => {
+        formData.append('skills[]', skill);
+      });
+    }
     
     // Add files if provided
     if (userData.profileImage && userData.profileImage instanceof File) {
@@ -130,7 +165,11 @@ export const updateProfile = async (userData) => {
   }
 };
 
-// Request password reset
+/**
+ * Request password reset
+ * @param {string} email - User email
+ * @returns {Promise<Object>} Response message
+ */
 export const requestPasswordReset = async (email) => {
   try {
     const response = await api.post('/auth/password-reset-request', { email });
@@ -141,7 +180,12 @@ export const requestPasswordReset = async (email) => {
   }
 };
 
-// Reset password with token
+/**
+ * Reset password with token
+ * @param {string} token - Password reset token
+ * @param {string} password - New password
+ * @returns {Promise<Object>} Response message
+ */
 export const resetPassword = async (token, password) => {
   try {
     const response = await api.post('/auth/password-reset', { token, password });

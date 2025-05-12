@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
-import { jobsData } from "../assets/assets";
+import { getAllJobs } from "../api/jobApi";
+import { useQuery } from "@tanstack/react-query";
 
 export const AppContext = createContext()
 
@@ -11,28 +12,47 @@ export const AppContextProvider = (props) => {
     })
 
     const [isSearched,setIsSearched] = useState(false)
+    const [jobsParams, setJobsParams] = useState({
+        search: '',
+        location: '',
+        jobType: '',
+        skills: [],
+        status: 'active',
+        sort: 'latest',
+        page: 1,
+        limit: 20
+    })
 
-    const [jobs, setJobs] = useState([])
+    const { data: jobsData, isLoading, error } = useQuery({
+        queryKey: ['jobs', jobsParams],
+        queryFn: () => getAllJobs(jobsParams),
+        keepPreviousData: true
+    })
 
-    // Function to fetch jobs
-    const fetchJobs = async () => {
-        setJobs(jobsData)
-    }
-
-    useEffect(()=> {
-        fetchJobs()
-    },[])
+    // Set search params whenever searchFilter changes
+    useEffect(() => {
+        if (searchFilter.title || searchFilter.location) {
+            setJobsParams(prev => ({
+                ...prev,
+                search: searchFilter.title,
+                location: searchFilter.location,
+                page: 1 // Reset to first page on new search
+            }))
+        }
+    }, [searchFilter])
 
     const value = {
-        setSearchFilter,searchFilter,
+        setSearchFilter, searchFilter,
         isSearched, setIsSearched,
-        jobs,setJobs,
+        jobs: jobsData?.jobs || [],
+        totalJobs: jobsData?.totalJobs || 0,
+        isLoading,
+        error,
+        jobsParams,
+        setJobsParams
     }
 
     return (<AppContext.Provider value={value}>
-
         {props.children}
-
     </AppContext.Provider>)
-
 }
